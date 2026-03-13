@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Wiki - PyQHub</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* Modern Dark Wikipedia Theme */
+        :root {
+            --bg-base: #101418;
+            --bg-surface: #1f2124;
+            --bg-surface-hover: #2a2d31;
+            --text-main: #eaecf0;
+            --text-muted: #a2a9b1;
+            --accent-blue: #8dbcf0;
+            --border-color: #54595d;
+            --badge-gold: #ffd700;
+            --badge-bg: rgba(255, 215, 0, 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: var(--bg-base); color: var(--text-main); line-height: 1.6; }
+
+        header { background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 1.5rem; font-weight: bold; color: var(--text-main); text-decoration: none; }
+        
+        .layout { display: flex; max-width: 1400px; margin: 0 auto; }
+        aside { width: 250px; padding: 20px; border-right: 1px solid var(--border-color); height: calc(100vh - 60px); position: sticky; top: 60px; }
+        aside h3 { font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; margin: 20px 0 10px 0; }
+        aside ul { list-style: none; }
+        aside ul li a { color: var(--text-main); text-decoration: none; display: block; padding: 6px 8px; cursor: pointer; }
+        aside ul li a:hover { background-color: var(--bg-surface-hover); color: var(--accent-blue); }
+
+        main { flex: 1; padding: 40px; max-width: 900px; }
+        
+        /* Modals (Popups) */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
+        .modal { background: var(--bg-surface); padding: 30px; border-radius: 8px; border: 1px solid var(--border-color); width: 400px; max-width: 90%; }
+        .modal h2 { margin-bottom: 15px; }
+        .modal input { width: 100%; padding: 10px; margin-bottom: 15px; background: var(--bg-base); border: 1px solid var(--border-color); color: white; border-radius: 4px; }
+        .close-btn { background: none; border: 1px solid var(--border-color); color: white; padding: 8px 15px; cursor: pointer; margin-right: 10px; }
+        
+        /* Content Elements */
+        .college-selector { margin-bottom: 30px; display: flex; align-items: center; gap: 15px; }
+        .college-selector select { padding: 10px; background: var(--bg-surface); border: 1px solid var(--border-color); color: white; font-size: 1.1rem; border-radius: 4px; flex: 1;}
+        
+        .contribution-box { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 40px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group select, .form-group textarea { width: 100%; background-color: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; border-radius: 4px; }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        button.primary-btn { background-color: var(--accent-blue); color: var(--bg-base); border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+
+        .wiki-feed { display: flex; flex-direction: column; gap: 20px; }
+        .wiki-card { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; display: flex; gap: 15px; }
+        .vote-column { display: flex; flex-direction: column; align-items: center; min-width: 40px; }
+        .vote-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; }
+        .vote-btn:hover { color: var(--accent-blue); }
+        .content-column { flex: 1; }
+        .card-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-muted); }
+        .category-tag { background-color: var(--bg-base); padding: 2px 8px; border-radius: 12px; border: 1px solid var(--border-color); text-transform: uppercase; font-size: 0.75rem; }
+        .verified-badge { color: var(--badge-gold); background-color: var(--badge-bg); padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="#" class="logo">PyQHub <span>Wiki</span></a>
+    </header>
+
+    <div class="layout">
+        <aside>
+            <h3>Navigation</h3>
+            <ul>
+                <li><a href="#" onclick="fetchAndRenderFeed()">Refresh Feed</a></li>
+            </ul>
+            <h3>Contribute</h3>
+            <ul>
+                <li><a onclick="openModal('addCollegeModal')">🏛️ Add a College</a></li>
+                <li><a onclick="openModal('verifyModal')">🎓 Verify Student ID</a></li>
+            </ul>
+            <div id="statusIndicator" style="margin-top:20px; font-size:0.8rem; color:var(--badge-gold); display:none;">
+                ✓ You are a Verified Student
+            </div>
+        </aside>
+
+        <main>
+            <div class="college-selector">
+                <h2>Viewing:</h2>
+                <select id="activeCollege" onchange="fetchAndRenderFeed()">
+                    <option value="General">General / All Colleges</option>
+                    <option value="City Engineering College">City Engineering College</option>
+                    </select>
+            </div>
+
+            <div class="contribution-box">
+                <h2>Add a tip for this college</h2>
+                <form id="tipForm">
+                    <div class="form-group">
+                        <select id="categorySelect" required>
+                            <option value="" disabled selected>Select a Category...</option>
+                            <option value="The Prof Guide">The Prof Guide</option>
+                            <option value="Resource Hub">Resource Hub</option>
+                            <option value="The Cheat Sheet">The Cheat Sheet</option>
+                            <option value="Social Map">Social Map</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="tipContent" placeholder="Share your tip here..." required></textarea>
+                    </div>
+                    <button type="submit" class="primary-btn">Publish Tip</button>
+                </form>
+            </div>
+
+            <div class="wiki-feed" id="wikiFeed">
+                <p>Loading tips...</p>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="addCollegeModal">
+        <div class="modal">
+            <h2>Add a New College</h2>
+            <p style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.9rem;">Enter the full name of the university or college.</p>
+            <input type="text" id="newCollegeName" placeholder="e.g., State Science Institute">
+            <button class="close-btn" onclick="closeModal('addCollegeModal')">Cancel</button>
+            <button class="primary-btn" onclick="addNewCollege()">Add College</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="verifyModal">
+        <div class="modal">
+            <h2>Verify Student Status</h2>
+            <p style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.9rem;">Enter your official university email (.edu or .ac.in) to get the Verified badge on your tips.</p>
+            <input type="email" id="studentEmail" placeholder="student@college.ac.in">
+            <button class="close-btn" onclick="closeModal('verifyModal')">Cancel</button>
+            <button class="primary-btn" onclick="verifyStudent()">Verify Email</button>
+        </div>
+    </div>
+
+    <script>
+        // Supabase Initialization
+        const { createClient } = supabase;
+        const supabaseUrl = 'https://tkptfzxfbjjpktsqcnmz.supabase.co';
+        const supabaseKey = 'sb_publishable_caqFkBR9blhwMJaKWVszcQ_ned4dvUa';
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+        const wikiFeed = document.getElementById('wikiFeed');
+        const activeCollegeDropdown = document.getElementById('activeCollege');
+        
+        // --- MODAL LOGIC ---
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // --- VERIFY STUDENT LOGIC ---
+        // Check local storage on load to see if they are already verified
+        let isUserVerified = localStorage.getItem('isVerified') === 'true';
+        if(isUserVerified) document.getElementById('statusIndicator').style.display = 'block';
+
+        function verifyStudent() {
+            const email = document.getElementById('studentEmail').value;
+            // Simple check to ensure email ends with .edu or .ac.in
+            if(email.includes('.edu') || email.includes('.ac.in')) {
+                localStorage.setItem('isVerified', 'true');
+                isUserVerified = true;
+                document.getElementById('statusIndicator').style.display = 'block';
+                alert("Success! You now have the Verified Senior badge.");
+                closeModal('verifyModal');
+            } else {
+                alert("Please enter a valid academic email ending in .edu or .ac.in");
+            }
+        }
+
+        // --- ADD COLLEGE LOGIC ---
+        function addNewCollege() {
+            const newName = document.getElementById('newCollegeName').value;
+            if(newName.trim() !== "") {
+                // Create a new option element
+                const newOption = document.createElement("option");
+                newOption.value = newName;
+                newOption.text = newName;
+                
+                // Add to dropdown and select it
+                activeCollegeDropdown.appendChild(newOption);
+                activeCollegeDropdown.value = newName;
+                
+                closeModal('addCollegeModal');
+                fetchAndRenderFeed(); // Reload feed for new empty college
+            }
+        }
+
+        // --- FETCH FEED LOGIC (Now filters by College) ---
+        async function fetchAndRenderFeed() {
+            const currentCollege = activeCollegeDropdown.value;
+            wikiFeed.innerHTML = '<p>Loading tips...</p>';
+
+            // Fetch rows that match the selected college
+            const { data: tipsData, error } = await supabaseClient
+                .from('wiki_tips')
+                .select('*')
+                .eq('college_name', currentCollege) // FILTER ADDED HERE
+                .order('upvotes', { ascending: false });
+
+            if (error) {
+                wikiFeed.innerHTML = '<p style="color:red;">Error. Did you add the "college_name" column to Supabase?</p>';
+                return;
+            }
+
+            wikiFeed.innerHTML = ''; 
+
+            if (tipsData.length === 0) {
+                wikiFeed.innerHTML = `<p>No tips found for ${currentCollege} yet. Be the first to add one!</p>`;
+                return;
+            }
+
+            tipsData.forEach(tip => {
+                const verifiedHtml = tip.is_verified ? `<span class="verified-badge">✓ Verified Senior</span>` : '';
+                const cardHtml = `
+                    <div class="wiki-card">
+                        <div class="vote-column">
+                            <button class="vote-btn" onclick="handleUpvote(${tip.id}, ${tip.upvotes})">▲</button>
+                            <span class="vote-count">${tip.upvotes}</span>
+                        </div>
+                        <div class="content-column">
+                            <div class="card-meta">
+                                <span class="category-tag">${tip.category}</span>
+                                <span>Posted by ${tip.author || 'Anonymous'}</span>
+                                ${verifiedHtml}
+                            </div>
+                            <div class="card-text">${tip.content}</div>
+                        </div>
+                    </div>
+                `;
+                wikiFeed.insertAdjacentHTML('beforeend', cardHtml);
+            });
+        }
+
+        // --- SUBMIT TIP LOGIC (Now includes College and Verification Status) ---
+        document.getElementById('tipForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.querySelector('.primary-btn');
+            submitBtn.innerText = "Publishing...";
+
+            const { error } = await supabaseClient
+                .from('wiki_tips')
+                .insert([{ 
+                    college_name: activeCollegeDropdown.value, // Saves under the selected college
+                    category: document.getElementById('categorySelect').value, 
+                    content: document.getElementById('tipContent').value, 
+                    author: isUserVerified ? "Verified User" : "Anonymous",
+                    upvotes: 0,
+                    is_verified: isUserVerified // Passes the verification status
+                }]);
+
+            if (error) alert("Error: Make sure you added 'college_name' column to Supabase!");
+            else {
+                document.getElementById('tipForm').reset();
+                fetchAndRenderFeed();
+            }
+            submitBtn.innerText = "Publish Tip";
+        });
+
+        // --- UPVOTE LOGIC ---
+        async function handleUpvote(id, currentUpvotes) {
+            const { error } = await supabaseClient
+                .from('wiki_tips')
+                .update({ upvotes: currentUpvotes + 1 })
+                .eq('id', id);
+
+            if (!error) fetchAndRenderFeed();
+        }
+
+        // Initial Load
+        fetchAndRenderFeed();
+    </script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>College Wiki - PyQHub</title>
+    <title>College Wiki</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -20,47 +20,90 @@
             --badge-bg: rgba(255, 215, 0, 0.1);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { background-color: var(--bg-base); color: var(--text-main); line-height: 1.6; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+        body { background-color: var(--bg-base); color: var(--text-main); line-height: 1.6; display: flex; flex-direction: column; min-height: 100vh; }
 
-        header { background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        header { background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
         .logo { font-size: 1.5rem; font-weight: bold; color: var(--text-main); text-decoration: none; }
+        .logo span { color: var(--accent-blue); }
         
-        .layout { display: flex; max-width: 1400px; margin: 0 auto; }
-        aside { width: 250px; padding: 20px; border-right: 1px solid var(--border-color); height: calc(100vh - 60px); position: sticky; top: 60px; }
+        .layout { display: flex; max-width: 1400px; margin: 0 auto; flex: 1; width: 100%; }
+        
+        /* Sidebar Navigation */
+        aside { width: 260px; padding: 20px; border-right: 1px solid var(--border-color); height: calc(100vh - 60px); position: sticky; top: 60px; overflow-y: auto; }
         aside h3 { font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; margin: 20px 0 10px 0; }
         aside ul { list-style: none; }
-        aside ul li a { color: var(--text-main); text-decoration: none; display: block; padding: 6px 8px; cursor: pointer; }
+        aside ul li a { color: var(--text-main); text-decoration: none; display: block; padding: 8px 10px; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
         aside ul li a:hover { background-color: var(--bg-surface-hover); color: var(--accent-blue); }
 
-        main { flex: 1; padding: 40px; max-width: 900px; }
+        /* Main Content */
+        main { flex: 1; padding: 30px 40px; max-width: 900px; width: 100%; }
         
         /* Modals (Popups) */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
-        .modal { background: var(--bg-surface); padding: 30px; border-radius: 8px; border: 1px solid var(--border-color); width: 400px; max-width: 90%; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; padding: 15px; }
+        .modal { background: var(--bg-surface); padding: 30px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; max-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .modal h2 { margin-bottom: 15px; }
-        .modal input { width: 100%; padding: 10px; margin-bottom: 15px; background: var(--bg-base); border: 1px solid var(--border-color); color: white; border-radius: 4px; }
-        .close-btn { background: none; border: 1px solid var(--border-color); color: white; padding: 8px 15px; cursor: pointer; margin-right: 10px; }
+        .modal input { width: 100%; padding: 12px; margin-bottom: 15px; background: var(--bg-base); border: 1px solid var(--border-color); color: white; border-radius: 4px; font-size: 1rem; }
+        .close-btn { background: none; border: 1px solid var(--border-color); color: white; padding: 10px 15px; cursor: pointer; border-radius: 4px; margin-right: 10px; }
+        .close-btn:hover { background: var(--bg-surface-hover); }
         
         /* Content Elements */
-        .college-selector { margin-bottom: 30px; display: flex; align-items: center; gap: 15px; }
-        .college-selector select { padding: 10px; background: var(--bg-surface); border: 1px solid var(--border-color); color: white; font-size: 1.1rem; border-radius: 4px; flex: 1;}
+        .college-selector { margin-bottom: 30px; display: flex; align-items: center; gap: 15px; background: var(--bg-surface); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .college-selector h2 { font-size: 1.2rem; white-space: nowrap; margin: 0; }
+        .college-selector select { padding: 10px; background: var(--bg-base); border: 1px solid var(--border-color); color: white; font-size: 1rem; border-radius: 4px; flex: 1; cursor: pointer; outline: none; }
+        .college-selector select:focus { border-color: var(--accent-blue); }
         
-        .contribution-box { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 40px; }
+        .contribution-box { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 25px; margin-bottom: 40px; }
+        .contribution-box h2 { margin-bottom: 15px; font-size: 1.3rem; }
         .form-group { margin-bottom: 15px; }
-        .form-group select, .form-group textarea { width: 100%; background-color: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; border-radius: 4px; }
-        .form-group textarea { min-height: 80px; resize: vertical; }
-        button.primary-btn { background-color: var(--accent-blue); color: var(--bg-base); border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .form-group select, .form-group textarea { width: 100%; background-color: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); padding: 12px; border-radius: 4px; font-size: 1rem; }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        button.primary-btn { background-color: var(--accent-blue); color: var(--bg-base); border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        button.primary-btn:hover { opacity: 0.9; }
 
         .wiki-feed { display: flex; flex-direction: column; gap: 20px; }
         .wiki-card { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; display: flex; gap: 15px; }
         .vote-column { display: flex; flex-direction: column; align-items: center; min-width: 40px; }
-        .vote-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; }
+        .vote-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem; line-height: 1; }
         .vote-btn:hover { color: var(--accent-blue); }
-        .content-column { flex: 1; }
-        .card-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-muted); }
-        .category-tag { background-color: var(--bg-base); padding: 2px 8px; border-radius: 12px; border: 1px solid var(--border-color); text-transform: uppercase; font-size: 0.75rem; }
-        .verified-badge { color: var(--badge-gold); background-color: var(--badge-bg); padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .vote-count { font-weight: bold; margin-top: 5px; }
+        
+        .content-column { flex: 1; min-width: 0; /* Prevents text overflow */ }
+        .card-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted); }
+        .category-tag { background-color: var(--bg-base); padding: 3px 10px; border-radius: 12px; border: 1px solid var(--border-color); text-transform: uppercase; font-size: 0.75rem; }
+        .verified-badge { color: var(--badge-gold); background-color: var(--badge-bg); padding: 3px 8px; border-radius: 4px; font-weight: bold; display: inline-block; }
+        .card-text { font-size: 1rem; word-wrap: break-word; }
+
+        /* Footer / Copyright */
+        footer { background: var(--bg-surface); text-align: center; padding: 20px; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.9rem; margin-top: auto; }
+
+        /* 📱 MOBILE RESPONSIVE DESIGN 📱 */
+        @media (max-width: 768px) {
+            .layout { flex-direction: column; }
+            
+            /* Make sidebar horizontal on mobile */
+            aside { width: 100%; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--border-color); padding: 15px; display: flex; flex-direction: column; }
+            aside h3 { margin: 10px 0 5px 0; }
+            aside ul { display: flex; flex-wrap: wrap; gap: 10px; }
+            aside ul li { flex: 1; min-width: 140px; }
+            aside ul li a { background: var(--bg-surface-hover); text-align: center; border: 1px solid var(--border-color); }
+            
+            /* Main Content Adjustments */
+            main { padding: 20px 15px; }
+            
+            /* Stack College Selector */
+            .college-selector { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .college-selector select { width: 100%; }
+            
+            /* Fix Card Layout */
+            .wiki-card { padding: 15px; gap: 10px; }
+            .vote-column { min-width: 30px; }
+            .card-meta { flex-direction: column; align-items: flex-start; gap: 5px; }
+            
+            /* Button adjustments */
+            button.primary-btn { width: 100%; }
+            .close-btn { width: 100%; margin-bottom: 10px; margin-right: 0; }
+        }
     </style>
 </head>
 <body>
@@ -73,15 +116,15 @@
         <aside>
             <h3>Navigation</h3>
             <ul>
-                <li><a href="#" onclick="fetchAndRenderFeed()">Refresh Feed</a></li>
+                <li><a onclick="fetchAndRenderFeed()">🔄 Refresh Feed</a></li>
             </ul>
             <h3>Contribute</h3>
             <ul>
                 <li><a onclick="openModal('addCollegeModal')">🏛️ Add a College</a></li>
                 <li><a onclick="openModal('verifyModal')">🎓 Verify Student ID</a></li>
             </ul>
-            <div id="statusIndicator" style="margin-top:20px; font-size:0.8rem; color:var(--badge-gold); display:none;">
-                ✓ You are a Verified Student
+            <div id="statusIndicator" style="margin-top:15px; font-size:0.85rem; color:var(--badge-gold); display:none; text-align:center; padding: 8px; border: 1px solid var(--badge-gold); border-radius: 4px; background: var(--badge-bg);">
+                ✓ Verified Student
             </div>
         </aside>
 
@@ -90,7 +133,6 @@
                 <h2>Viewing:</h2>
                 <select id="activeCollege" onchange="fetchAndRenderFeed()">
                     <option value="General">General / All Colleges</option>
-                    <option value="City Engineering College">City Engineering College</option>
                     </select>
             </div>
 
@@ -119,20 +161,24 @@
         </main>
     </div>
 
+    <footer>
+        &copy; 2026 localhostamit. All rights reserved.
+    </footer>
+
     <div class="modal-overlay" id="addCollegeModal">
         <div class="modal">
             <h2>Add a New College</h2>
-            <p style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.9rem;">Enter the full name of the university or college.</p>
+            <p style="margin-bottom: 15px; color: var(--text-muted); font-size: 0.9rem;">This will create a new wiki page visible to all users.</p>
             <input type="text" id="newCollegeName" placeholder="e.g., State Science Institute">
             <button class="close-btn" onclick="closeModal('addCollegeModal')">Cancel</button>
-            <button class="primary-btn" onclick="addNewCollege()">Add College</button>
+            <button class="primary-btn" onclick="addNewCollege()">Create College Wiki</button>
         </div>
     </div>
 
     <div class="modal-overlay" id="verifyModal">
         <div class="modal">
             <h2>Verify Student Status</h2>
-            <p style="margin-bottom: 10px; color: var(--text-muted); font-size: 0.9rem;">Enter your official university email (.edu or .ac.in) to get the Verified badge on your tips.</p>
+            <p style="margin-bottom: 15px; color: var(--text-muted); font-size: 0.9rem;">Enter your official university email (.edu or .ac.in) to get the Verified badge.</p>
             <input type="email" id="studentEmail" placeholder="student@college.ac.in">
             <button class="close-btn" onclick="closeModal('verifyModal')">Cancel</button>
             <button class="primary-btn" onclick="verifyStudent()">Verify Email</button>
@@ -154,13 +200,11 @@
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
         // --- VERIFY STUDENT LOGIC ---
-        // Check local storage on load to see if they are already verified
         let isUserVerified = localStorage.getItem('isVerified') === 'true';
         if(isUserVerified) document.getElementById('statusIndicator').style.display = 'block';
 
         function verifyStudent() {
             const email = document.getElementById('studentEmail').value;
-            // Simple check to ensure email ends with .edu or .ac.in
             if(email.includes('.edu') || email.includes('.ac.in')) {
                 localStorage.setItem('isVerified', 'true');
                 isUserVerified = true;
@@ -172,50 +216,95 @@
             }
         }
 
-        // --- ADD COLLEGE LOGIC ---
-        function addNewCollege() {
-            const newName = document.getElementById('newCollegeName').value;
-            if(newName.trim() !== "") {
-                // Create a new option element
-                const newOption = document.createElement("option");
-                newOption.value = newName;
-                newOption.text = newName;
+        // --- LOAD GLOBAL COLLEGES FROM DATABASE ---
+        async function loadColleges() {
+            // Fetch all tips to extract the college names
+            const { data, error } = await supabaseClient.from('wiki_tips').select('college_name');
+            
+            if (!error && data) {
+                // Find all unique college names
+                const uniqueColleges = [...new Set(data.map(tip => tip.college_name))];
                 
-                // Add to dropdown and select it
-                activeCollegeDropdown.appendChild(newOption);
-                activeCollegeDropdown.value = newName;
+                // Save whatever is currently selected so the dropdown doesn't reset randomly
+                const currentlySelected = activeCollegeDropdown.value;
                 
-                closeModal('addCollegeModal');
-                fetchAndRenderFeed(); // Reload feed for new empty college
+                // Reset dropdown to just 'General'
+                activeCollegeDropdown.innerHTML = '<option value="General">General / All Colleges</option>';
+                
+                // Add all unique colleges from the database to the dropdown
+                uniqueColleges.forEach(college => {
+                    if(college && college !== 'General') {
+                        const option = document.createElement("option");
+                        option.value = college;
+                        option.text = college;
+                        activeCollegeDropdown.appendChild(option);
+                    }
+                });
+
+                // Re-select the option the user was looking at
+                if ([...activeCollegeDropdown.options].map(o => o.value).includes(currentlySelected)) {
+                    activeCollegeDropdown.value = currentlySelected;
+                }
             }
         }
 
-        // --- FETCH FEED LOGIC (Now filters by College) ---
+        // --- ADD COLLEGE LOGIC (Now Saves Globally to Supabase) ---
+        async function addNewCollege() {
+            const newName = document.getElementById('newCollegeName').value.trim();
+            if(newName !== "") {
+                const btn = document.querySelector('#addCollegeModal .primary-btn');
+                btn.innerText = "Creating...";
+
+                // Insert a "System Tip" into the database so the college name is permanently saved
+                const { error } = await supabaseClient
+                    .from('wiki_tips')
+                    .insert([{ 
+                        college_name: newName, 
+                        category: 'Resource Hub', 
+                        content: `Welcome to the ${newName} Wiki! Be the first student to add a real tip.`, 
+                        author: "System Auto-Message",
+                        upvotes: 0,
+                        is_verified: true 
+                    }]);
+                
+                if (!error) {
+                    closeModal('addCollegeModal');
+                    await loadColleges(); // Reload the dropdown menu globally
+                    activeCollegeDropdown.value = newName; // Switch view to the new college
+                    fetchAndRenderFeed(); // Show the new feed
+                    document.getElementById('newCollegeName').value = ""; // Clear input
+                } else {
+                    alert("Error saving college to database. Check connection.");
+                }
+                btn.innerText = "Create College Wiki";
+            }
+        }
+
+        // --- FETCH FEED LOGIC ---
         async function fetchAndRenderFeed() {
             const currentCollege = activeCollegeDropdown.value;
-            wikiFeed.innerHTML = '<p>Loading tips...</p>';
+            wikiFeed.innerHTML = '<p style="text-align:center;">Loading tips...</p>';
 
-            // Fetch rows that match the selected college
             const { data: tipsData, error } = await supabaseClient
                 .from('wiki_tips')
                 .select('*')
-                .eq('college_name', currentCollege) // FILTER ADDED HERE
+                .eq('college_name', currentCollege)
                 .order('upvotes', { ascending: false });
 
             if (error) {
-                wikiFeed.innerHTML = '<p style="color:red;">Error. Did you add the "college_name" column to Supabase?</p>';
+                wikiFeed.innerHTML = '<p style="color:red;">Error loading feed from database.</p>';
                 return;
             }
 
             wikiFeed.innerHTML = ''; 
 
             if (tipsData.length === 0) {
-                wikiFeed.innerHTML = `<p>No tips found for ${currentCollege} yet. Be the first to add one!</p>`;
+                wikiFeed.innerHTML = `<p style="text-align:center; color: var(--text-muted);">No tips found for ${currentCollege} yet. Be the first!</p>`;
                 return;
             }
 
             tipsData.forEach(tip => {
-                const verifiedHtml = tip.is_verified ? `<span class="verified-badge">✓ Verified Senior</span>` : '';
+                const verifiedHtml = tip.is_verified ? `<span class="verified-badge">✓ Verified</span>` : '';
                 const cardHtml = `
                     <div class="wiki-card">
                         <div class="vote-column">
@@ -236,27 +325,30 @@
             });
         }
 
-        // --- SUBMIT TIP LOGIC (Now includes College and Verification Status) ---
+        // --- SUBMIT TIP LOGIC ---
         document.getElementById('tipForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const submitBtn = document.querySelector('.primary-btn');
+            const submitBtn = document.querySelector('#tipForm .primary-btn');
             submitBtn.innerText = "Publishing...";
 
             const { error } = await supabaseClient
                 .from('wiki_tips')
                 .insert([{ 
-                    college_name: activeCollegeDropdown.value, // Saves under the selected college
+                    college_name: activeCollegeDropdown.value, 
                     category: document.getElementById('categorySelect').value, 
                     content: document.getElementById('tipContent').value, 
-                    author: isUserVerified ? "Verified User" : "Anonymous",
+                    author: isUserVerified ? "Verified User" : "Anonymous Student",
                     upvotes: 0,
-                    is_verified: isUserVerified // Passes the verification status
+                    is_verified: isUserVerified 
                 }]);
 
-            if (error) alert("Error: Make sure you added 'college_name' column to Supabase!");
+            if (error) alert("Error publishing tip.");
             else {
                 document.getElementById('tipForm').reset();
+                
+                // If they posted to "General", we might need to refresh the college dropdown too
+                await loadColleges(); 
                 fetchAndRenderFeed();
             }
             submitBtn.innerText = "Publish Tip";
@@ -272,8 +364,13 @@
             if (!error) fetchAndRenderFeed();
         }
 
-        // Initial Load
-        fetchAndRenderFeed();
+        // Initialize Page
+        async function initializePage() {
+            await loadColleges(); // First, load all colleges globally
+            fetchAndRenderFeed(); // Second, load the feed for 'General'
+        }
+        
+        initializePage();
     </script>
 </body>
 </html>
